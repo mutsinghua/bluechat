@@ -19,6 +19,7 @@ public class ChatController {
     private ConnectThread mConnectThread;
     private AcceptThread mAcceptThread;
 
+
     /**
      * 网络协议的处理函数
      */

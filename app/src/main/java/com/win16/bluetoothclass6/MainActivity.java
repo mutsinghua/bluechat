@@ -12,6 +12,8 @@ import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
+import android.support.annotation.ColorRes;
+import android.support.annotation.StringRes;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.view.View;
@@ -39,51 +41,23 @@ public class MainActivity extends Activity {
 
 
     public static final int REQUEST_CODE = 0;
-    private List<BluetoothDevice> mDeviceList = new ArrayList<>();
-    private List<BluetoothDevice> mBondedDeviceList = new ArrayList<>();
+    public static final int MAX_SIZE = 30;
+    public static final int INT = 30;
 
-    private BlueToothController mController = new BlueToothController();
-    private ListView mListView;
-    private DeviceAdapter mAdapter;
-    private Toast mToast;
+    public List<BluetoothDevice> mDeviceList = new ArrayList<>();
+    public List<BluetoothDevice> mBondedDeviceList = new ArrayList<>();
 
-    private View mChatPanel;
-    private Button mSendBt;
-    private EditText mInputBox;
-    private TextView mChatContent;
-    private StringBuilder mChatText = new StringBuilder();
-    @Override
-    protected void onCreate(Bundle savedInstanceState) {
-        super.onCreate(savedInstanceState);
-
-        initActionBar();
-        setContentView(R.layout.activity_main);
-        initUI();
-
-        registerBluetoothReceiver();
-        mController.turnOnBlueTooth(this, REQUEST_CODE);
-
-    }
-
-    private void registerBluetoothReceiver() {
-        IntentFilter filter = new IntentFilter();
-        //开始查找
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
-        //结束查找
-        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
-        //查找设备
-        filter.addAction(BluetoothDevice.ACTION_FOUND);
-        //设备扫描模式改变
-        filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
-        //绑定状态
-        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
-
-        registerReceiver(mReceiver, filter);
-    }
-
-    private Handler mUIHandler = new MyHandler();
-
-    private BroadcastReceiver mReceiver = new BroadcastReceiver() {
+    protected BlueToothController mController = new BlueToothController();
+    protected ListView mListView;
+    protected DeviceAdapter mAdapter;
+    protected Toast mToast;
+    protected View mChatPanel;
+    protected Button mSendButton;
+    protected EditText mInputBox;
+    protected TextView mChatContent;
+    protected StringBuilder mChatText = new StringBuilder();
+    protected Handler mUIHandler = new MyHandler();
+    protected BroadcastReceiver mReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
             String action = intent.getAction();
@@ -106,6 +80,7 @@ public class MainActivity extends Activity {
                int scanMode = intent.getIntExtra(BluetoothAdapter.EXTRA_SCAN_MODE,0);
                 if( scanMode == BluetoothAdapter.SCAN_MODE_CONNECTABLE_DISCOVERABLE) {
                     setProgressBarIndeterminateVisibility(true);
+
                 }
                 else {
                     setProgressBarIndeterminateVisibility(false);
@@ -130,7 +105,48 @@ public class MainActivity extends Activity {
             }
         }
     };
+    private AdapterView.OnItemClickListener bindDeviceClick = new AdapterView.OnItemClickListener() {
+        @TargetApi(Build.VERSION_CODES.KITKAT)
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            BluetoothDevice device = mDeviceList.get(i);
+            if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
+                device.createBond();
 
+            }
+            
+
+        }
+    };
+
+    @Override
+    public Intent getIntent() {
+        return super.getIntent();
+    }
+
+    private AdapterView.OnItemClickListener bindedDeviceClick = new AdapterView.OnItemClickListener() {
+
+
+        @Override
+        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
+            BluetoothDevice device = mBondedDeviceList.get(i);
+            ChatController.getInstance().startChatWith(device, mController.getAdapter(),mUIHandler);
+        }
+    };
+
+    @Override
+    protected void onCreate(Bundle savedInstanceState) {
+        super.onCreate(savedInstanceState);
+        try {
+            initActionBar();
+            setContentView(R.layout.activity_main);
+            registerBluetoothReceiver();
+        } catch (Exception e) {
+            e.printStackTrace();
+        }
+        initUI();
+        mController.turnOnBlueTooth(this, REQUEST_CODE);
+    }
 
     private void initUI() {
         mListView = (ListView) findViewById(R.id.device_list);
@@ -138,8 +154,8 @@ public class MainActivity extends Activity {
         mListView.setAdapter(mAdapter);
         mListView.setOnItemClickListener(bindDeviceClick);
         mChatPanel = findViewById(R.id.chat_panel);
-        mSendBt = (Button) findViewById(R.id.bt_send);
-        mSendBt.setOnClickListener(new View.OnClickListener() {
+        mSendButton = (Button) findViewById(R.id.bt_send);
+        mSendButton.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 String ext = mInputBox.getText().toString();
@@ -152,6 +168,29 @@ public class MainActivity extends Activity {
         });
         mInputBox = (EditText) findViewById(R.id.chat_edit);
         mChatContent = (TextView) findViewById(R.id.chat_content);
+
+        int i = 30;
+    }
+
+    @Override
+    protected void onResume() {
+        super.onResume();
+    }
+
+    private void registerBluetoothReceiver() {
+        IntentFilter filter = new IntentFilter();
+        //开始查找
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_STARTED);
+        //结束查找
+        filter.addAction(BluetoothAdapter.ACTION_DISCOVERY_FINISHED);
+        //查找设备
+        filter.addAction(BluetoothDevice.ACTION_FOUND);
+        //设备扫描模式改变
+        filter.addAction(BluetoothAdapter.ACTION_SCAN_MODE_CHANGED);
+        //绑定状态
+        filter.addAction(BluetoothDevice.ACTION_BOND_STATE_CHANGED);
+
+        registerReceiver(mReceiver, filter);
     }
 
     @Override
@@ -173,21 +212,30 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    /**
+     *
+     */
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
         if( requestCode == REQUEST_CODE) {
             if( resultCode != RESULT_OK) {
                 finish();
             }
+
         }
     }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.menu_main, menu);
+
         return true;
     }
 
+    /**
+     *
+     * @param text
+     */
     private void showToast(String text) {
 
         if( mToast == null) {
@@ -197,7 +245,11 @@ public class MainActivity extends Activity {
             mToast.setText(text);
         }
         mToast.show();
+
+
+
     }
+
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
@@ -237,26 +289,6 @@ public class MainActivity extends Activity {
         return super.onOptionsItemSelected(item);
     }
 
-
-    private AdapterView.OnItemClickListener bindDeviceClick = new AdapterView.OnItemClickListener() {
-        @TargetApi(Build.VERSION_CODES.KITKAT)
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-            BluetoothDevice device = mDeviceList.get(i);
-            if( Build.VERSION.SDK_INT >= Build.VERSION_CODES.KITKAT) {
-                device.createBond();
-            }
-        }
-    };
-
-    private AdapterView.OnItemClickListener bindedDeviceClick = new AdapterView.OnItemClickListener() {
-        @Override
-        public void onItemClick(AdapterView<?> adapterView, View view, int i, long l) {
-            BluetoothDevice device = mBondedDeviceList.get(i);
-            ChatController.getInstance().startChatWith(device, mController.getAdapter(),mUIHandler);
-        }
-    };
-
     private void initActionBar() {
         requestWindowFeature(Window.FEATURE_INDETERMINATE_PROGRESS);
         getActionBar().setDisplayUseLogoEnabled(false);
@@ -287,13 +319,14 @@ public class MainActivity extends Activity {
                     exitChatMode();
                     break;
                 case Constant.MSG_GOT_DATA:
-                    byte[] data = (byte[]) msg.obj;
+                    {byte[] data = (byte[]) msg.obj;
                     mChatText.append(ChatController.getInstance().decodeMessage(data)).append("\n");
-                    mChatContent.setText(mChatText.toString());
+                    mChatContent.setText(mChatText.toString());}
                     break;
                 case Constant.MSG_ERROR:
+                    {byte[] data = (byte[]) msg.obj;
                     exitChatMode();
-                    showToast("error: "+String.valueOf(msg.obj));
+                    showToast("error: "+String.valueOf(msg.obj));}
                     break;
                 case Constant.MSG_CONNECTED_TO_SERVER:
                     enterChatMode();
@@ -302,6 +335,7 @@ public class MainActivity extends Activity {
                 case Constant.MSG_GOT_A_CLINET:
                     enterChatMode();
                     showToast("Got a Client");
+                    String s = "jkhjkhjhjj";
                     break;
             }
         }

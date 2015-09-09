@@ -13,38 +13,5 @@
         android:layout_height="match_parent"></ListView>
 
     <!--聊天面板 -->
-    <RelativeLayout
-        android:visibility="visible"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:id="@+id/chat_panel"
-        >
-        <!-- 聊天按钮 -->
-        <Button
-            android:id="@+id/bt_send"
-            android:layout_width="100dp"
-            android:layout_height="50dp"
-            android:text="@string/send"
-            android:layout_alignParentRight="true"
-            android:layout_alignParentBottom="true"
-            />
-
-        <!-- 聊天输入框 -->
-        <EditText
-            android:id="@+id/chat_edit"
-            android:layout_width="match_parent"
-            android:layout_height="50dp"
-            android:layout_toLeftOf="@+id/bt_send"
-            android:layout_alignParentBottom="true"
-
-            />
-
-        <!-- 聊天对话框 -->
-        <TextView
-            android:id="@+id/chat_content"
-            android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:layout_above="@+id/bt_send"
-            />
-    </RelativeLayout>
+    <include layout="@layout/chat_layout" />
 </RelativeLayout>

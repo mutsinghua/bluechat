@@ -1,0 +1,37 @@
+<?xml version="1.0" encoding="utf-8"?>
+<RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:visibility="visible"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent"
+    android:id="@+id/chat_panel"
+    tools:showIn="@layout/activity_main">
+    <!-- 聊天按钮 -->
+    <Button
+        android:id="@+id/bt_send"
+        android:layout_width="100dp"
+        android:layout_height="50dp"
+        android:text="@string/send"
+        tools:text="gone"
+        android:layout_alignParentEnd="true"
+        android:layout_alignParentRight="true"
+        android:layout_alignParentBottom="true" />
+
+    <!-- 聊天输入框 -->
+    <EditText
+        android:id="@+id/chat_edit"
+        android:layout_width="match_parent"
+        android:layout_height="50dp"
+        android:layout_toLeftOf="@+id/bt_send"
+        android:layout_toStartOf="@+id/bt_send"
+        android:layout_alignParentBottom="true"
+
+        />
+
+    <!-- 聊天对话框 -->
+    <TextView
+        android:id="@+id/chat_content"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:layout_above="@+id/bt_send" />
+</RelativeLayout>
